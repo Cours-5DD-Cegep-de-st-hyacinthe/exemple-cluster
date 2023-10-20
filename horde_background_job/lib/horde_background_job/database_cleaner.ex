@@ -4,9 +4,15 @@ defmodule HordeBackgroundJob.DatabaseCleaner do
 
   alias __MODULE__.Runner
 
+  def start_link(opts) do
+    name = Keyword.get(opts, :name, __MODULE__)
+    timeout = Keyword.get(opts, :timeout, @default_timeout)
+
+    GenServer.start_link(__MODULE__, timeout, name: name)
+  end
+
   @impl GenServer
-  def init(args \\ []) do
-    timeout = Keyword.get(args, :timeout)
+  def init(timeout) do
 
     schedule(timeout)
 
@@ -15,6 +21,8 @@ defmodule HordeBackgroundJob.DatabaseCleaner do
 
   @impl GenServer
   def handle_info(:execute, timeout) do
+    log("deleting outdated records...")
+
     Task.start(Runner, :execute, [])
 
     schedule(timeout)
@@ -23,6 +31,12 @@ defmodule HordeBackgroundJob.DatabaseCleaner do
   end
 
   defp schedule(timeout) do
+    log("scheduling for #{timeout}ms")
+
     Process.send_after(self(), :execute, timeout)
+  end
+
+  defp log(text) do
+    Logger.info("----[#{node()}-#{inspect(self())}] #{__MODULE__} #{text}")
   end
 end

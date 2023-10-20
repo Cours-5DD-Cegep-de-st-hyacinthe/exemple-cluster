@@ -17,7 +17,7 @@ defmodule HordeBackgroundJob.DatabaseCleaner.Starter do
     name =
       opts
       |> Keyword.get(:name, DatabaseCleaner)
-      |> via_tuple
+      |> via_tuple()
 
     new_opts = Keyword.put(opts, :name, name)
 
